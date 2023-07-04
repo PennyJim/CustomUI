@@ -1,0 +1,1 @@
+A bare impelementation of a WindowManager for [OpenOS](https://github.com/MightyPirates/OpenComputers/blob/master-MC1.7.10/src/main/resources/assets/opencomputers/doc/en_US/general/openOS.md).
