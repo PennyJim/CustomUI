@@ -120,6 +120,7 @@ end
 ---@param isRelative boolean?
 ---@param maxScroll integer?
 function Textbox:_moveCursor(xPos, isRelative, maxScroll)
+-- FIXME: scrolls too far right when given a large value
   maxScroll = maxScroll or math.maxinteger
   -- Make beginning equal 0
   if isRelative then xPos = self.cursorOffset + xPos end
@@ -179,8 +180,10 @@ Textbox._key["left"] = function(self, clickState, keyboard, user)
 Textbox._key["right"] = function(self, clickState, keyboard, user)
   self:_moveCursor(1, true); return true end
 
+-- FIXME: scrolls too far left when cursor is at the left edge
 Textbox._key["back"] = function(self, clickState, keyboard, user)
   local offset = self.textOffset+self.cursorOffset
+  if offset == 0 then return true end -- Nothing to delete
   self.text = self.text:sub(1, offset-1)..self.text:sub(offset+1,-1)
   self:_moveCursor(-1, true)
   if not self.parentWindow.redraw then self.parentWindow:markRedraw() end
@@ -194,15 +197,15 @@ Textbox._key["delete"] = function(self, clickState, keyboard, user)
 end
 
 Textbox._key["home"] = function(self, clickState, keyboard, user)
-  self:_moveCursor(-math.maxinteger, true); return true end
+  self:_moveCursor(-math.maxinteger); return true end
 Textbox._key["up"] = function(self, clickState, keyboard, user)
-  self:_moveCursor(-math.maxinteger, true); return true end
+  self:_moveCursor(-math.maxinteger); return true end
 Textbox._key["pageUp"] = function(self, clickState, keyboard, user)
   self:_moveText(-self.size.x+2); return true end
 Textbox._key["end"] = function(self, clickState, keyboard, user)
-  self:_moveCursor(math.maxinteger, true); return true end
+  self:_moveCursor(math.maxinteger); return true end
 Textbox._key["down"] = function(self, clickState, keyboard, user)
-  self:_moveCursor(math.maxinteger, true); return true end
+  self:_moveCursor(math.maxinteger); return true end
 Textbox._key["pageDown"] = function(self, clickState, keyboard, user)
   self:_moveText(self.size.x-2); return true end
 
