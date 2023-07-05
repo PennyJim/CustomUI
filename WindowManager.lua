@@ -7,6 +7,7 @@ Window = require("./CustomUI/Window")
 thread = require("thread")
 event = require("event")
 component = require("component")
+keyboard = require("keyboard")
 ---@diagnostic enable: lowercase-global
 
 ---Moves the item at an index to another position
@@ -262,11 +263,16 @@ function WindowManager:key(keyboard, event, input, code, user)
   -- TODO: add macros like alt-tab
 
   if not used and activeWindow then
-    used = activeWindow:key(self.clickState, keyboard, event, input, code, user)
+    used = activeWindow:key(self.clickState,
+      keyboard, event, input, code, user)
   end
   if not used and selectedElement then
-    used = selectedElement:key(self.clickState, keyboard, event, input, code, user)
+    used = selectedElement:key(self.clickState,
+      keyboard, event, input, code, user)
   end
+  -- NOTE: maybe add a keySoft for the window?
+  -- maybe instead change the previous key to a variation
+  -- like keyHard or keyMacro for 'important' key-handling
   return used
 end
 
@@ -282,8 +288,6 @@ function WindowManager:_eventHandler(event, addr, ...)
     local x, y, button, user = ...
     self:click(event, Vector2{x, y}, button, user)
   elseif event == "key_down" or event == "key_up" or event == "clipboard" then
-    local keyboard = component.get(addr)
-    -- Either that or pass the addr and have `self:key()` handle it
     ---@cast event keyEvent
     local input, code, user
     if event ~= "clipboard" then
@@ -350,7 +354,10 @@ function WindowManager:start()
   self.events = { --TODO: turn into separate thread?
     event.listen("touch", self.eventHandler),
     event.listen("drag", self.eventHandler),
-    event.listen("drop", self.eventHandler)
+    event.listen("drop", self.eventHandler),
+    event.listen("key_down", self.eventHandler),
+    event.listen("key_up", self.eventHandler),
+    event.listen("clipboard", self.eventHandler)
   }
   --TODO: move the xpcall inside the while loop
   self.frameThread = thread.create(function(Screen)
@@ -374,6 +381,9 @@ function WindowManager:stop()
   event.cancel(self.events[1])
   event.cancel(self.events[2])
   event.cancel(self.events[3])
+  event.cancel(self.events[4])
+  event.cancel(self.events[5])
+  event.cancel(self.events[6])
   self.events = {}
 end
 
