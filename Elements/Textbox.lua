@@ -120,14 +120,15 @@ end
 ---@param isRelative boolean?
 ---@param maxScroll integer?
 function Textbox:_moveCursor(xPos, isRelative, maxScroll)
+  maxScroll = maxScroll or math.maxinteger
   -- Make beginning equal 0
   if not isRelative then xPos = xPos - 1 end
   -- Bound to window and shift it left or right
   if xPos < 0 then
-    self:_moveText(math.min(xPos, -maxScroll))
+    self:_moveText(math.max(xPos, -maxScroll))
     xPos = 0
   elseif xPos > self.size.x-3 then
-    self:_moveText(math.max(xPos-self.size.x+2,maxScroll))
+    self:_moveText(math.min(xPos-self.size.x+3,maxScroll))
     xPos = self.size.x-3
   end
   self.cursorOffset = xPos
@@ -145,7 +146,7 @@ function Textbox:down(clickState, pos, button, user)
   -- pos - self.pos = [1,1] --> [0,0]
   local localPos = pos - self:_getAbsPos()
   if localPos.y == 1 and localPos.x ~= 0 or localPos.x ~= self.size.x-1 then
-    self:_moveCursor(localPos.x)
+    self:_moveCursor(localPos.x-1)
     --Make self active element
     clickState.selectedElement = self
     return true
@@ -153,14 +154,10 @@ function Textbox:down(clickState, pos, button, user)
   return false
 end
 function Textbox:drag(clickState, pos, button, user)
-  -- Set cursorOffset to nearest point in text window
-  -- And shift window if to the left or right
-  self:_moveCursor((pos-self:_getAbsPos()).x)
-  -- Old code, not useful if new `_moveCursor()` works
-  -- local localPos = pos - self.pos -- [1,1] --> [0,0] because math
-  -- if localPos.x < 1 then self:_moveCursor(1)
-  -- elseif localPos.x > self.size.x-2 then self:_moveCursor(self.size.x-2)
-  -- else self:_moveCursor(localPos.x) end
+  -- Set cursorOffset to x position, and limit
+  -- Scrolling to 1 character at a time
+  local xPos = pos.x-self:_getAbsPos().x-1
+  self:_moveCursor(xPos, false, 1)
 end
 -- function TextBox:drop(clickState, pos, button, user)
 
