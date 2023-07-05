@@ -98,29 +98,39 @@ end
 ---Move text window in that direction
 ---@param direction integer
 function Textbox:_moveText(direction)
-  -- Bound direction to -1 or 1 (or 0, but that does nothing)
-  if direction < 0 then direction = -1
-  elseif direction > 0 then direction = 1 end
-  -- If text window already at bounds, do nothing
-  if direction < 0 and self.textOffset == 0 or
-    direction > 0 and self.textOffset >= #self.text - self.size.x + 3
+  local rightBound = #self.text - self.size.x + 3
+  -- Do nothing if nothing will be done
+  if self.textOffset == 0 and direction < 0 or
+  self.textOffset == rightBound and direction > 0 or
+  direction == 0
   then return end
-  -- update text window
-  self.textOffset = self.textOffset+direction
+
+  -- If text window will exceed bounds, clamp it
+  if self.textOffset + direction < 0 then
+    self.textOffset = 0
+  elseif self.textOffset + direction > rightBound then
+    self.textOffset = rightBound
+  else
+    self.textOffset = self.textOffset+direction
+  end
   self.parentWindow:markRedraw()
 end
 ---Move cursor to position
 ---@param xPos integer
-function Textbox:_moveCursor(xPos)
+---@param isRelative boolean?
+---@param maxScroll integer?
+function Textbox:_moveCursor(xPos, isRelative, maxScroll)
+  -- Make beginning equal 0
+  if not isRelative then xPos = xPos - 1 end
   -- Bound to window and shift it left or right
-  if xPos < 1 then 
-    self:_moveText(-1)
-    xPos = 1
-  elseif xPos > self.size.x-2 then
-    self:_moveText(1)
-    xPos = self.size.x-2
+  if xPos < 0 then
+    self:_moveText(math.min(xPos, -maxScroll))
+    xPos = 0
+  elseif xPos > self.size.x-3 then
+    self:_moveText(math.max(xPos-self.size.x+2,maxScroll))
+    xPos = self.size.x-3
   end
-  self.cursorOffset = xPos-1
+  self.cursorOffset = xPos
   self.flickerTime = os.time()
 
   -- Shift cursorOffset to the left if after string
