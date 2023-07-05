@@ -2,7 +2,8 @@
 
 ---@class Color: integer
 ---@alias ElementType "element" | "box" | "text" | "window" | "textbox" --Unneded?
----@alias clickEvent "down" | "drag" | "drop"
+---@alias clickEvent "down" | "drag" | "drop" | "touch"
+---@alias keyEvent "key_down" | "key_up" | "clipboard"
 
 ---@class Component
 ---@field address string
@@ -41,6 +42,14 @@
 ---@field freeMemory fun():number
 ---@field getBufferSize fun(index:number?):number,number
 ---@field bitblt fun(dst:number?,col:number?,row:number?,width:number?,height:number?,src:number?,fromCol:number?,fromRow:number?)
+
+---@class Keyboard: Component
+---@field isAltDown fun(): boolean
+---@field isControl fun(char:number): boolean
+---@field isControlDown fun(): boolean
+---@field isKeyDown fun(charOrCode: any): boolean
+---@field isShiftDown fun(): boolean
+---@field keys table<string,integer>|table<integer,string>
 
 -----@class os
 -----@field clock fun():number

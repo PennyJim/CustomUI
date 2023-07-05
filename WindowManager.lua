@@ -6,6 +6,7 @@ Window = require("./CustomUI/Window")
 ---@diagnostic disable: lowercase-global
 thread = require("thread")
 event = require("event")
+component = require("component")
 ---@diagnostic enable: lowercase-global
 
 ---Moves the item at an index to another position
@@ -168,6 +169,7 @@ function WindowManager:drawCursor()
   return oldBg, oldFg, self.gpu.set(cursor.pos.x, cursor.pos.y, cursor.cursor)
 end
 
+---Draws a frame to the screen
 function WindowManager:drawFrame()
   if self.redrawWindows then
     -- Draw background, then revert back to default colors
@@ -207,7 +209,7 @@ end
 ---@param pos Vector2
 ---@param button integer
 ---@param user string
----@return boolean #Whether or not it has bubbled up
+---@return boolean #Whether or not it has been used
 function WindowManager:click(event, pos, button, user)
   local used = false
   -- Move cursor if not lifted
@@ -246,14 +248,51 @@ function WindowManager:click(event, pos, button, user)
   return used
 end
 
-function WindowManager:_eventHandler(event, addr, x, y, button, user)
+---Handles any key event and sends it to the selected element
+---@param event keyEvent
+---@param input string?
+---@param code integer?
+---@param user string
+---@return boolean #Whether or not it has been used
+function WindowManager:key(keyboard, event, input, code, user)
+  local selectedElement = self.clickState.selectedElement
+  local activeWindow = self.clickState.activeWindow
+  local used = false
+
+  -- TODO: add macros like alt-tab
+
+  if not used and activeWindow then
+    used = activeWindow:key(self.clickState, keyboard, event, input, code, user)
+  end
+  if not used and selectedElement then
+    used = selectedElement:key(self.clickState, keyboard, event, input, code, user)
+  end
+  return used
+end
+
+---Handles events
+---@param event clickEvent | keyEvent
+---@param addr any
+---@param ... unknown
+function WindowManager:_eventHandler(event, addr, ...)
   if (event == "drag" or event == "touch" or event == "drop")
     and addr == self.gpu.getScreen()
   then
     if event == "touch" then event = "down" end
+    local x, y, button, user = ...
     self:click(event, Vector2{x, y}, button, user)
+  elseif event == "key_down" or event == "key_up" or event == "clipboard" then
+    local keyboard = component.get(addr)
+    -- Either that or pass the addr and have `self:key()` handle it
+    ---@cast event keyEvent
+    local input, code, user
+    if event ~= "clipboard" then
+      input, code, user = ...
+      if keyboard.isControl(input) then input = nil
+      else input = string.char(input) end
+    else input, user = ... end
+    self:key(keyboard, event, input, code, user)
   end
-  -- TODO: elseif keyboard event do type
 end
 
 --#endregion

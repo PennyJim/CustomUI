@@ -208,6 +208,11 @@ function Window:drop(clickState, pos, button, user)
     return true
 end
 
+-- TODO: add macros like alt-q (quitting the window)
+function Window:key(clickState, keyboard, event, input, code, user)
+  return false
+end
+
 
 Window = Window:new{}
 return Window

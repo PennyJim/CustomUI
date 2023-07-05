@@ -175,8 +175,19 @@ function Element:drop(clickState, pos, button, user) return false end
 function Element:click(clickState, event, pos, button, user)
   local used = self[event](self, clickState, pos, button, user)
   if not used then return self:_clickChild(clickState, event, pos, button, user)
-  else return used end
+  else return true end
 end
+
+---Handles the keyboard event if it can
+---@param clickState clickState
+---@param keyboard Keyboard
+---@param event keyEvent
+---@param input string?
+---@param code integer?
+---@param user string
+---@return boolean # Whether or not the event has been used
+function Element:key(clickState, keyboard, event, input, code, user)
+return false end
 
 
 Element = Element:new{}

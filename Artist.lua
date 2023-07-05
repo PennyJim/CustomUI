@@ -34,7 +34,7 @@ function Artist.text(gpu, position, maxWidth, givenString)
     return gpu.set(position.x, position.y, string)
 end
 
----Changes color and returns whether the color changed and what to
+---Changes color and returns whether the color changed, and what to
 ---@private
 ---@param gpu GPU
 ---@param newColor Color?
@@ -49,7 +49,7 @@ function Artist._switchColor(gpu, newColor, gpuFunc)
   end
 end
 
----Changes background color and returns whether the color changed and what to
+---Changes background color and returns whether the color changed, and what to
 ---@see Artist._switchColor
 ---@param gpu GPU
 ---@param newColor Color?
@@ -57,7 +57,7 @@ end
 function Artist.switchBackground(gpu, newColor)
   return Artist._switchColor(gpu, newColor, "setBackground")
 end
----Changes foreground color and returns whether the color changed and what to
+---Changes foreground color and returns whether the color changed, and what to
 ---@see Artist._switchColor
 ---@param gpu GPU
 ---@param newColor Color?
@@ -85,7 +85,6 @@ end
 ---@param oldBg Color?
 ---@param oldFg Color?
 ---@param ... unknown
----@return boolean
 ---@return unknown
 function Artist.resetColors(gpu, oldBg, oldFg, ...)
   if oldBg then gpu.setBackground(oldBg) end
