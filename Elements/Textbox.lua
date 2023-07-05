@@ -122,7 +122,7 @@ end
 function Textbox:_moveCursor(xPos, isRelative, maxScroll)
   maxScroll = maxScroll or math.maxinteger
   -- Make beginning equal 0
-  if not isRelative then xPos = xPos - 1 end
+  if isRelative then xPos = self.cursorOffset + xPos end
   -- Bound to window and shift it left or right
   if xPos < 0 then
     self:_moveText(math.max(xPos, -maxScroll))
@@ -160,26 +160,72 @@ function Textbox:drag(clickState, pos, button, user)
   self:_moveCursor(xPos, false, 1)
 end
 -- function TextBox:drop(clickState, pos, button, user)
-
 -- end
 
--- TODO: make into a proper function when keyboard events are implemented
-function Textbox:keyPress(key)
+--#region keyCode functions
+Textbox._key = {}
+-- [x]: Arrow Keys
+-- [x]: Home/end
+-- [x]: Pageup/Pagedown #Maybe remove and let window handle it?
+-- [x]: Backspace/Del
+-- [\]: Tab # this box does not handle these
+-- [\]: Enter
+
+-- TODO: add ctrl modifier behavior
+-- [ ]: Arrow Keys
+-- [ ]: Backspace/Del
+Textbox._key["left"] = function(self, clickState, keyboard, user)
+  self:_moveCursor(-1, true); return true end
+Textbox._key["right"] = function(self, clickState, keyboard, user)
+  self:_moveCursor(1, true); return true end
+
+Textbox._key["back"] = function(self, clickState, keyboard, user)
   local offset = self.textOffset+self.cursorOffset
-  local newText = self.text:sub(1, offset) .. key .. self.text:sub(offset+1, -1)
-  -- Move cursor
-  -- Or text window if at end of text window
-  if self.cursorOffset < self.size.x-2 then
-    self.cursorOffset = self.cursorOffset+1
-  else
-    self.textOffset = self.textOffset+1
+  self.text = self.text:sub(1, offset-1)..self.text:sub(offset+1,-1)
+  self:_moveCursor(-1, true)
+  if not self.parentWindow.redraw then self.parentWindow:markRedraw() end
+  return true
+end
+Textbox._key["delete"] = function(self, clickState, keyboard, user)
+  local offset = self.textOffset+self.cursorOffset
+  self.text = self.text:sub(1, offset)..self.text:sub(offset+2,-1)
+  self.parentWindow:markRedraw()
+  return true
+end
+
+Textbox._key["home"] = function(self, clickState, keyboard, user)
+  self:_moveCursor(-math.maxinteger, true); return true end
+Textbox._key["up"] = function(self, clickState, keyboard, user)
+  self:_moveCursor(-math.maxinteger, true); return true end
+Textbox._key["pageUp"] = function(self, clickState, keyboard, user)
+  self:_moveText(-self.size.x+2); return true end
+Textbox._key["end"] = function(self, clickState, keyboard, user)
+  self:_moveCursor(math.maxinteger, true); return true end
+Textbox._key["down"] = function(self, clickState, keyboard, user)
+  self:_moveCursor(math.maxinteger, true); return true end
+Textbox._key["pageDown"] = function(self, clickState, keyboard, user)
+  self:_moveText(self.size.x-2); return true end
+
+--#endregion
+
+function Textbox:key(clickState, keyboard, event, input, code, user)
+  -- Don't handle key_up
+  if event == "key_up" then return false end
+
+  if input then
+    local offset = self.textOffset+self.cursorOffset
+    local newText = self.text:sub(1, offset)..input..self.text:sub(offset+1, -1)
+    self.text = newText
+    self:_moveCursor(#input, true)
+    if not self.parentWindow.redraw then self.parentWindow:markRedraw() end
+    return true
+  elseif code then
+    local keyCodeName = keyboard.keys[code]
+    if self._key[keyCodeName] then
+      return self._key[keyCodeName](self, clickState, keyboard, user)
+    end
   end
-
-
-  --Left arrrow
-  self:_moveCursor(self.cursorOffset)
-  --Right arrrow
-  self:_moveCursor(self.cursorOffset+2)
+  return false
 end
 
 
