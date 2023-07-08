@@ -99,6 +99,7 @@ end
 ---@param direction integer
 function Textbox:_moveText(direction)
   local rightBound = #self.text - self.size.x + 3
+  rightBound = math.max(rightBound, 0)
   -- Do nothing if nothing will be done
   if self.textOffset == 0 and direction < 0 or
   self.textOffset == rightBound and direction > 0 or
@@ -120,9 +121,7 @@ end
 ---@param isRelative boolean?
 ---@param maxScroll integer?
 function Textbox:_moveCursor(xPos, isRelative, maxScroll)
--- FIXME: scrolls too far right when given a large value
   maxScroll = maxScroll or math.maxinteger
-  -- Make beginning equal 0
   if isRelative then xPos = self.cursorOffset + xPos end
   -- Bound to window and shift it left or right
   if xPos < 0 then
@@ -180,7 +179,6 @@ Textbox._key["left"] = function(self, clickState, keyboard, user)
 Textbox._key["right"] = function(self, clickState, keyboard, user)
   self:_moveCursor(1, true); return true end
 
--- FIXME: scrolls too far left when cursor is at the left edge
 Textbox._key["back"] = function(self, clickState, keyboard, user)
   local offset = self.textOffset+self.cursorOffset
   if offset == 0 then return true end -- Nothing to delete
