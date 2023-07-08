@@ -141,6 +141,15 @@ function Textbox:_moveCursor(xPos, isRelative, maxScroll)
   end
 end
 
+-- COMMENT: there might be a better way to do this.
+-- Started on this, decided to look at system files to see how they did it
+-- Only to realize there's a proper "cursor" object... Might need to look into
+-- that and other things so I'm not reimplementing things I don't need to.
+-- Also, if I use proper objects, I might just be able to run those apps
+-- in their own window
+-- function Textbox:_findSeparator()
+-- end
+
 function Textbox:down(clickState, pos, button, user)
   -- If within text window, set cursorOffset
   -- pos - self.pos = [1,1] --> [0,0]
@@ -183,7 +192,12 @@ Textbox._key["back"] = function(self, clickState, keyboard, user)
   local offset = self.textOffset+self.cursorOffset
   if offset == 0 then return true end -- Nothing to delete
   self.text = self.text:sub(1, offset-1)..self.text:sub(offset+1,-1)
-  self:_moveCursor(-1, true)
+  -- NOTE: Looks kind of nice, not sure if it should stay
+  if self.cursorOffset > 1 or offset < 2 then
+    self:_moveCursor(-1, true)
+  else
+    self:_moveText(-1)
+  end
   if not self.parentWindow.redraw then self.parentWindow:markRedraw() end
   return true
 end
