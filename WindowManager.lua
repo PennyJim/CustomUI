@@ -249,12 +249,7 @@ function WindowManager:click(event, pos, button, user)
   return used
 end
 
--- COMMENT: there might be a better way to do this.
--- While looking into how edit.lua did ctrl-ing around text, I saw a vastly
--- Different implementation of how to handle text input. Maybe I should use
--- both an io stream and keyboard events, but that's while not understanding what
--- an io stream is. I need to learn how to use one.
--- TODO: An io stream to handle text input while keyboard is for macros?
+-- COMMENT: there might be a better way to do this. See #1
 
 ---Handles any key event and sends it to the selected element
 ---@param event keyEvent
