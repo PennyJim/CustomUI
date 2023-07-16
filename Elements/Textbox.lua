@@ -7,6 +7,7 @@ Artist = require("./CustomUI/Artist")
 ---@field defaultText string?
 ---@field defaultColor Color?
 ---@field text string
+---@field wordSeparator string #the findString for ctrl-jumping
 ---@field cursorOffset integer
 ---@field textOffset integer
 ---@field flickerTime number
@@ -25,6 +26,7 @@ function Textbox:construct(x, y, w, bg, fg, defaultText, defaultColor)
   newObj.defaultText = defaultText
   newObj.defaultColor = defaultColor
   newObj.text = ""
+  newObj.wordSeparator = "%f[%s%p]"
   newObj.cursorOffset = 0
   newObj.textOffset = 0
   newObj.type = "textbox"
@@ -163,6 +165,7 @@ end
 -- end
 
 --#region keyCode functions
+---@type {[string]:fun(self:Textbox,clickState:clickState,keyboard:Keyboard,user:string):boolean}
 Textbox._key = {}
 -- [x]: Arrow Keys
 -- [x]: Home/end
@@ -179,10 +182,18 @@ Textbox._key["left"] = function(self, clickState, keyboard, user)
 Textbox._key["right"] = function(self, clickState, keyboard, user)
   self:_moveCursor(1, true); return true end
 
+-- FIXME: Can't ctrl-backspace the final word.
 Textbox._key["back"] = function(self, clickState, keyboard, user)
   local offset = self.textOffset+self.cursorOffset
   if offset == 0 then return true end -- Nothing to delete
-  self.text = self.text:sub(1, offset-1)..self.text:sub(offset+1,-1)
+  local delLength = 1
+  if keyboard.isControlDown() then
+    local nextWord = #self.text - self.text:reverse():find(
+      self.wordSeparator,
+      #self.text - offset)
+    delLength = offset - nextWord
+  end
+  self.text = self.text:sub(1, offset-delLength)..self.text:sub(offset+1,-1)
   -- NOTE: Looks kind of nice, not sure if it should stay
   if self.cursorOffset > 1 or offset < 2 then
     self:_moveCursor(-1, true)
@@ -192,9 +203,17 @@ Textbox._key["back"] = function(self, clickState, keyboard, user)
   if not self.parentWindow.redraw then self.parentWindow:markRedraw() end
   return true
 end
+-- FIXME: Has weird behavior on ctrl-delete in middle of whitespace
+-- Seems to happen when cursor is on the second word separator after
+-- a word. Probably related to attempted fix for ctrl-backspace issue.
+-- Meaning a fix to Textbox.wordSeparator should fix it?
 Textbox._key["delete"] = function(self, clickState, keyboard, user)
   local offset = self.textOffset+self.cursorOffset
-  self.text = self.text:sub(1, offset)..self.text:sub(offset+2,-1)
+  local delPosition = offset+2
+  if keyboard.isControlDown() then
+    delPosition = self.text:find(self.wordSeparator, offset)
+  end
+  self.text = self.text:sub(1, offset)..self.text:sub(delPosition,-1)
   self.parentWindow:markRedraw()
   return true
 end
